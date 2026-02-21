@@ -36,8 +36,6 @@ namespace CMD_Csharp_EDITION
                 }
             } // Копипаста из доков NAudio
         });
-        //const string rickrol_url = "https://zvukoviku.ru/sounds/1651485572_18775-rickroll354.mp3";
-        //static string rickrol_fie = Path.GetTempPath() + "rickrol.mp3";
 
         static HttpClient httpClient = new HttpClient();
         static HttpClient httpClient_ip = new HttpClient();
@@ -133,8 +131,6 @@ namespace CMD_Csharp_EDITION
             catch (System.InvalidOperationException) {  }
             finally
             {
-                //byte[] bytes = await httpClient.GetByteArrayAsync(rickrol_url);
-                //File.WriteAllBytes(rickrol_fie, bytes); 
                 play_rick.Start();
                 Console.ForegroundColor = ConsoleColor.Green;
                 Process.Start("curl", "ascii.live/rick"); // curl запрос к опен сурс проекту (знаменитый рикрол в консоли)
